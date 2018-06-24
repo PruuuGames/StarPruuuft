@@ -102,3 +102,6 @@ ENV/
 
 # ide
 .idea/
+
+# sc2
+.SC2Replay
