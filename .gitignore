@@ -104,4 +104,4 @@ ENV/
 .idea/
 
 # sc2
-.SC2Replay
+*.SC2Replay
