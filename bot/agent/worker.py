@@ -4,7 +4,7 @@ import sc2
 from sc2.constants import *
 
 
-class BaseAgent(Agent):
+class WorkerAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
 
@@ -13,12 +13,11 @@ class BaseAgent(Agent):
         :param sc2.BotAI bot:
         :param iteration:
         """
-
-        cc = bot.units(UnitTypeId.COMMANDCENTER)
+        cc = bot.units(UnitTypeId.COMMANDCENTER).ready
         if not cc.exists:
             return
         else:
             cc = cc.first
 
-        if bot.supply_left > 0 and bot.workers.amount < 17 and cc.noqueue and bot.can_afford(UnitTypeId.SCV):
-            await bot.do(cc.train(UnitTypeId.SCV))
+        for scv in bot.units(UnitTypeId.SCV).idle:
+            await bot.do(scv.gather(bot.state.mineral_field.closest_to(cc)))

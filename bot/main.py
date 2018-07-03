@@ -4,7 +4,7 @@ from pathlib import Path
 
 import sc2
 
-from .agent import BaseAgent
+from .agent import *
 
 
 class StarPruuuft(sc2.BotAI):
@@ -16,6 +16,9 @@ class StarPruuuft(sc2.BotAI):
 
     def on_start(self):
         self._agents.append(BaseAgent(self))
+        self._agents.append(WorkerAgent(self))
+        self._agents.append(BuilderAgent(self))
+        self._agents.append(StrategyAgent(self))
 
     async def on_step(self, iteration):
         loop = asyncio.get_event_loop()
