@@ -12,18 +12,21 @@ class StarPruuuft(sc2.BotAI):
         NAME = json.load(f)["name"]
 
     def __init__(self):
-        self._agents = []
+        self.agents = {}
+
+    def add_agent(self, agent):
+        self.agents[agent.name()] = agent
 
     def on_start(self):
-        self._agents.append(BaseAgent(self))
-        self._agents.append(WorkerAgent(self))
-        self._agents.append(BuilderAgent(self))
-        self._agents.append(StrategyAgent(self))
+        self.add_agent(StrategyAgent(self))
+        self.add_agent(BaseAgent(self))
+        self.add_agent(BuilderAgent(self))
+        self.add_agent(WorkerAgent(self))
 
     async def on_step(self, iteration):
         loop = asyncio.get_event_loop()
         tasks = []
-        for agent in self._agents:
+        for agent in self.agents.values():
             tasks.append(loop.create_task(agent.on_step(self, iteration)))
         done, pending = await asyncio.wait(tasks, timeout=2.0)
         for task in pending:
