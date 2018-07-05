@@ -1,7 +1,8 @@
-from .agent import Agent
-
 import sc2
 from sc2.constants import *
+
+from bot.agent_message import AgentMessage
+from .agent import Agent
 
 SUPPLY_DEPOT_DANGER_DISTANCE = 11
 
@@ -11,6 +12,19 @@ class StrategyAgent(Agent):
         super().__init__(bot)
 
         self.supplies_raised = False
+        self._ramp_supply_depots = []
+
+    def _process_messages(self):
+        if len(self._messages) == 0:
+            return
+
+        for message in self._messages:
+            message_type = message[0]
+
+            if message_type is AgentMessage.RAMP_SUPPLY_DEPOT:
+                self._ramp_supply_depots.append(message[1][0])
+
+        self._messages = []
 
     @staticmethod
     def _enemies_near(bot, units):
@@ -27,9 +41,9 @@ class StrategyAgent(Agent):
         if not iteration % 10 == 0:
             return
 
-        # Get only ramp depots from builder agent
-        lowered_depots = bot.units(UnitTypeId.SUPPLYDEPOTLOWERED).ready
-        raised_depots = bot.units(UnitTypeId.SUPPLYDEPOT).ready
+        ramp_depots = bot.units.filter(lambda unit: unit.tag in self._ramp_supply_depots)
+        lowered_depots = ramp_depots.filter(lambda unit: unit.type_id is UnitTypeId.SUPPLYDEPOTLOWERED)
+        raised_depots = ramp_depots.filter(lambda unit: unit.type_id is UnitTypeId.SUPPLYDEPOT)
         enemies_near = self._enemies_near(bot, lowered_depots | raised_depots)
         morphing = []
 
@@ -40,7 +54,7 @@ class StrategyAgent(Agent):
                 morphing = [depot for depot in lowered_depots]
 
             self.supplies_raised = enemies_near
-            # broadcast information to BuilderAgent
+            self.send("BuilderAgent", AgentMessage.SUPPLY_DEPOTS_RAISED, enemies_near)
 
         if self.supplies_raised:
             [await bot.do(depot(AbilityId.MORPH_SUPPLYDEPOT_RAISE)) for depot in morphing]
@@ -52,5 +66,7 @@ class StrategyAgent(Agent):
         :param sc2.BotAI bot:
         :param iteration:
         """
+
+        self._process_messages()
 
         await self._handle_supply_depots(bot, iteration)
