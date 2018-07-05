@@ -19,5 +19,11 @@ class WorkerAgent(Agent):
         else:
             cc = cc.first
 
+        for refinery in bot.units(UnitTypeId.REFINERY).ready:
+            if refinery.assigned_harvesters < refinery.ideal_harvesters:
+                worker = bot.workers.closer_than(20, refinery)
+                if worker.exists:
+                    await bot.do(worker.random.gather(refinery))
+
         for scv in bot.units(UnitTypeId.SCV).idle:
             await bot.do(scv.gather(bot.state.mineral_field.closest_to(cc)))
