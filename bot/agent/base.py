@@ -20,5 +20,7 @@ class BaseAgent(Agent):
         else:
             cc = cc.first
 
-        if bot.supply_left > 0 and bot.workers.amount < 17 and cc.noqueue and bot.can_afford(UnitTypeId.SCV):
+        # Quantidade bugada, não reconhece bem quantos trabalhadores tem quando tem SCV nas refinarias
+        if bot.supply_left > 0 and bot.workers.amount < 21 and cc.noqueue and bot.can_afford(
+                UnitTypeId.SCV):
             await bot.do(cc.train(UnitTypeId.SCV))
