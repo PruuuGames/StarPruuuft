@@ -24,6 +24,8 @@ class BuilderAgent(Agent):
         self._starport = 0
         self._starport_reactor = 0
 
+        self._upgrade_command_center_ready = False
+
     def _process_messages(self):
         if len(self._messages) == 0:
             return
@@ -87,6 +89,9 @@ class BuilderAgent(Agent):
             return
 
         self._barracks = bot.units(UnitTypeId.BARRACKS).ready.amount
+        if not self._upgrade_command_center_ready and self._barracks == 1:
+            self._upgrade_command_center_ready = True
+            self.send("UpgradeAgent", AgentMessage.UPGRADE_COMMAND_CENTER_READY)
         enough_barracks = self._barracks > 0
         if self._starport > 0:
             enough_barracks = self._barracks > 1
@@ -202,7 +207,7 @@ class BuilderAgent(Agent):
         if self._depots_locations is None:
             self._setup_depos(bot)
 
-        cc = bot.units(UnitTypeId.COMMANDCENTER)
+        cc = (bot.units(UnitTypeId.COMMANDCENTER) | bot.units(UnitTypeId.ORBITALCOMMAND)).ready
         if not cc.exists:
             return
         else:

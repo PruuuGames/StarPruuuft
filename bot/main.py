@@ -22,6 +22,7 @@ class StarPruuuft(sc2.BotAI):
         self.add_agent(BaseAgent(self))
         self.add_agent(BuilderAgent(self))
         self.add_agent(WorkerAgent(self))
+        self.add_agent(UpgradeAgent(self))
 
     async def on_step(self, iteration):
         loop = asyncio.get_event_loop()

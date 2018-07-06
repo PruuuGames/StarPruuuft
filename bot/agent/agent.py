@@ -19,7 +19,7 @@ class Agent:
         self._messages.append((message_type, args))
 
     def send(self, targets, message_type, *args):
-        if type(targets) is not list:
+        if not isinstance(targets, list):
             targets = [targets]
 
         if targets is None:
