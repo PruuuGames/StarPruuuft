@@ -18,6 +18,11 @@ class BuilderAgent(Agent):
         self._barracks = 0
         self._refinery = 0
         self._barracks_tech = 0
+        self._barracks_reactor = 0
+        self._factory = 0
+        self._factory_tech = 0
+        self._starport = 0
+        self._starport_reactor = 0
 
     def _process_messages(self):
         if len(self._messages) == 0:
@@ -74,16 +79,48 @@ class BuilderAgent(Agent):
                 await bot.build(UnitTypeId.SUPPLYDEPOT, near=cc.position.towards(
                         bot.game_info.map_center, 4))
 
-    async def _build_main_barracks(self, bot, cc):
-        if self._barracks > 0 or self._supply_depots == 0:
+    async def _build_barracks(self, bot, cc):
+        enough_barracks = self._barracks > 0
+        if self._starport > 0:
+            enough_barracks = self._barracks > 1
+        if enough_barracks or self._supply_depots == 0:
             return
 
         self._barracks = bot.units(UnitTypeId.BARRACKS).ready.amount
-        if self._barracks > 0:
+        enough_barracks = self._barracks > 0
+        if self._starport > 0:
+            enough_barracks = self._barracks > 1
+        if enough_barracks:
             return
 
         if not bot.already_pending(UnitTypeId.BARRACKS) and bot.can_afford(UnitTypeId.BARRACKS):
-            await bot.build(UnitTypeId.BARRACKS, near=cc.position.towards(bot.game_info.map_center, 8))
+            await bot.build(UnitTypeId.BARRACKS, near=cc.position.towards(bot.game_info.map_center, 6))
+
+    async def _build_barracks_tech(self, bot):
+        if self._barracks_tech > 0 or self._barracks == 0:
+            return
+
+        self._barracks_tech = bot.units(UnitTypeId.BARRACKSTECHLAB).ready.amount
+        if self._barracks_tech > 0:
+            return
+
+        for barrack in bot.units(UnitTypeId.BARRACKS).ready:
+            if barrack.add_on_tag == 0 and not bot.already_pending(UnitTypeId.BARRACKSTECHLAB) and bot.can_afford(
+                    UnitTypeId.BARRACKSTECHLAB):
+                await bot.do(barrack.build(UnitTypeId.BARRACKSTECHLAB))
+
+    async def _build_barracks_reactor(self, bot):
+        if self._barracks_reactor > 0 or self._barracks < 2:
+            return
+
+        self._barracks_reactor = bot.units(UnitTypeId.BARRACKSREACTOR).ready.amount
+        if self._barracks_reactor > 0:
+            return
+
+        for barrack in bot.units(UnitTypeId.BARRACKS).ready:
+            if barrack.add_on_tag == 0 and not bot.already_pending(UnitTypeId.BARRACKSREACTOR) and bot.can_afford(
+                    UnitTypeId.BARRACKSREACTOR):
+                await bot.do(barrack.build(UnitTypeId.BARRACKSREACTOR))
 
     async def _build_refinery(self, bot, cc):
         if self._barracks < 1 or self._refinery >= 2:
@@ -106,18 +143,53 @@ class BuilderAgent(Agent):
                 await bot.do(worker.build(UnitTypeId.REFINERY, vg))
                 break
 
-    async def _build_main_barracks_tech(self, bot):
-        if self._barracks_tech > 0 or self._barracks == 0:
+    async def _build_factory(self, bot, cc):
+        if self._factory > 0 or self._barracks == 0:
             return
 
-        self._barracks_tech = bot.units(UnitTypeId.BARRACKSTECHLAB).ready.amount
-        if self._barracks_tech > 0:
+        self._factory = bot.units(UnitTypeId.FACTORY).ready.amount
+        if self._factory > 0:
             return
 
-        for barrack in bot.units(UnitTypeId.BARRACKS).ready:
-            if barrack.add_on_tag == 0 and not bot.already_pending(UnitTypeId.BARRACKSTECHLAB) and bot.can_afford(
-                    UnitTypeId.BARRACKSTECHLAB):
-                await bot.do(barrack.build(UnitTypeId.BARRACKSTECHLAB))
+        if not bot.already_pending(UnitTypeId.FACTORY) and bot.can_afford(UnitTypeId.FACTORY):
+            await bot.build(UnitTypeId.FACTORY, near=cc.position.towards(bot.game_info.map_center, 8))
+
+    async def _build_factory_tech(self, bot):
+        if self._factory_tech > 0 or self._factory == 0:
+            return
+
+        self._factory_tech = bot.units(UnitTypeId.FACTORYTECHLAB).ready.amount
+        if self._factory_tech > 0:
+            return
+
+        for factory in bot.units(UnitTypeId.FACTORY).ready:
+            if factory.add_on_tag == 0 and not bot.already_pending(UnitTypeId.FACTORYTECHLAB) and bot.can_afford(
+                    UnitTypeId.FACTORYTECHLAB):
+                await bot.do(factory.build(UnitTypeId.FACTORYTECHLAB))
+
+    async def _build_starport(self, bot, cc):
+        if self._starport > 0 or self._factory == 0:
+            return
+
+        self._starport = bot.units(UnitTypeId.STARPORT).ready.amount
+        if self._starport > 0:
+            return
+
+        if not bot.already_pending(UnitTypeId.STARPORT) and bot.can_afford(UnitTypeId.STARPORT):
+            await bot.build(UnitTypeId.STARPORT, near=cc.position.towards(bot.game_info.map_center, 10))
+
+    async def _build_starport_reactor(self, bot):
+        if self._starport_reactor > 0 or self._starport == 0:
+            return
+
+        self._starport_reactor = bot.units(UnitTypeId.STARPORTREACTOR).ready.amount
+        if self._starport_reactor > 0:
+            return
+
+        for starport in bot.units(UnitTypeId.STARPORT).ready:
+            if starport.add_on_tag == 0 and not bot.already_pending(UnitTypeId.STARPORTREACTOR) and bot.can_afford(
+                    UnitTypeId.STARPORTREACTOR):
+                await bot.do(starport.build(UnitTypeId.STARPORTREACTOR))
 
     async def on_step(self, bot, iteration):
         """
@@ -137,6 +209,11 @@ class BuilderAgent(Agent):
             cc = cc.first
 
         await self._build_supply_depot(bot, cc)
-        await self._build_main_barracks(bot, cc)
+        await self._build_barracks(bot, cc)
         await self._build_refinery(bot, cc)
-        await self._build_main_barracks_tech(bot)
+        await self._build_barracks_tech(bot)
+        await self._build_factory(bot, cc)
+        await self._build_factory_tech(bot)
+        await self._build_starport(bot, cc)
+        await self._build_starport_reactor(bot)
+        await self._build_barracks_reactor(bot)
