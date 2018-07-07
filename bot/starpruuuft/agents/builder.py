@@ -26,21 +26,33 @@ class BuilderAgent(Agent):
         self._starport = 0
         self._starport_reactor = 0
 
+        self._notified = False
+
     async def on_step(self, bot, iteration):
         # Roda apenas uma vez
         if self._depots_locations is None:
             self._setup_depos(bot)
 
         # Caso não exista CC, o agente não faz nada
-        cc = utilities.get_command_center()
+        cc = utilities.get_command_center(bot)
         if cc is None:
             return
 
         self._update_counts(bot)
 
+        if self._barracks > 0 and not self._notified:
+            self._notified = True
+            self.send("BaseAgent", AgentMessage.BARRACKS_READY)
+
         await self._build_supply_depot(bot, cc)
         await self._build_refinery(bot, cc)
         await self._build_barracks(bot, cc)
+        await self._build_barracks_tech(bot)
+        await self._build_barracks_reactor(bot)
+        await self._build_factory(bot, cc)
+        await self._build_factory_tech(bot)
+        await self._build_starport(bot, cc)
+        await self._build_starport_reactor(bot)
 
     # Reconhece um depot localizado na rampa
     def _handle_enemies_near(self, *args):
@@ -145,6 +157,7 @@ class BuilderAgent(Agent):
             if barrack.add_on_tag == 0 and not bot.already_pending(UnitTypeId.BARRACKSTECHLAB) and bot.can_afford(
                     UnitTypeId.BARRACKSTECHLAB):
                 await bot.do(barrack.build(UnitTypeId.BARRACKSTECHLAB))
+                break
 
     async def _build_barracks_reactor(self, bot):
         if self._barracks_reactor > 0 or self._barracks < 2:
@@ -154,6 +167,7 @@ class BuilderAgent(Agent):
             if barrack.add_on_tag == 0 and not bot.already_pending(UnitTypeId.BARRACKSREACTOR) and bot.can_afford(
                     UnitTypeId.BARRACKSREACTOR):
                 await bot.do(barrack.build(UnitTypeId.BARRACKSREACTOR))
+                break
 
     async def _build_factory(self, bot, cc):
         if self._factory > 0 or self._barracks == 0:
@@ -170,6 +184,7 @@ class BuilderAgent(Agent):
             if factory.add_on_tag == 0 and not bot.already_pending(UnitTypeId.FACTORYTECHLAB) and bot.can_afford(
                     UnitTypeId.FACTORYTECHLAB):
                 await bot.do(factory.build(UnitTypeId.FACTORYTECHLAB))
+                break
 
     async def _build_starport(self, bot, cc):
         if self._starport > 0 or self._factory == 0:
@@ -186,3 +201,4 @@ class BuilderAgent(Agent):
             if starport.add_on_tag == 0 and not bot.already_pending(UnitTypeId.STARPORTREACTOR) and bot.can_afford(
                     UnitTypeId.STARPORTREACTOR):
                 await bot.do(starport.build(UnitTypeId.STARPORTREACTOR))
+                break

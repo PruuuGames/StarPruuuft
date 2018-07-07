@@ -12,7 +12,7 @@ class StrategyAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
 
-        self.add_message_handler(AgentMessage.RAMP_SUPPLY_DEPOT, self._handle_supply_depots)
+        self.add_message_handler(AgentMessage.RAMP_SUPPLY_DEPOT, self._handle_ramp_supply_depot)
 
         self._supplies_raised = False
         self._ramp_supply_depots = []
@@ -21,7 +21,7 @@ class StrategyAgent(Agent):
         await self._handle_supply_depots(bot, iteration)
 
     # Reconhece um depot localizado na rampa
-    def _handle_upgrade_ready(self, *args):
+    def _handle_ramp_supply_depot(self, *args):
         self._ramp_supply_depots.append(args[0])
 
     async def _handle_supply_depots(self, bot, iteration):
@@ -47,7 +47,7 @@ class StrategyAgent(Agent):
             self.broadcast(AgentMessage.ENEMIES_CLOSE, enemies_near)
 
         # Ajusta os depots
-        if self.supplies_raised:
+        if self._supplies_raised:
             [await bot.do(depot(AbilityId.MORPH_SUPPLYDEPOT_RAISE)) for depot in morphing]
         else:
             [await bot.do(depot(AbilityId.MORPH_SUPPLYDEPOT_LOWER)) for depot in morphing]

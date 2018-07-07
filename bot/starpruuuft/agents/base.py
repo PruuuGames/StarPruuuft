@@ -9,14 +9,14 @@ class BaseAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
 
-        self.add_message_handler(AgentMessage.UPGRADE_COMMAND_CENTER_READY, self._handle_upgrade_ready)
+        self.add_message_handler(AgentMessage.BARRACKS_READY, self._handle_upgrade_ready)
 
         # Indica se o CC deve parar de treinar SCVs para liberar espaço na filas
         self._upgrade_command_center_ready = False
 
     async def on_step(self, bot, iteration):
         # Caso não exista CC, o agente não faz nada
-        cc = utilities.get_command_center()
+        cc = utilities.get_command_center(bot)
         if cc is None:
             return
 
@@ -24,7 +24,7 @@ class BaseAgent(Agent):
         await self._calldown_mule(bot, cc)
 
     # Atualiza o estado para marcar que o upgrade para orbital já pode ser realizado
-    def _handle_upgrade_ready(self):
+    def _handle_upgrade_ready(self, *args):
         self._upgrade_command_center_ready = True
 
     async def _train_scvs(self, bot, cc):

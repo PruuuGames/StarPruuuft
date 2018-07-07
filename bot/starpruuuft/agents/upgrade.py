@@ -12,14 +12,14 @@ class UpgradeAgent(Agent):
 
     async def on_step(self, bot, iteration):
         # Caso não exista CC, o agente não faz nada
-        cc = utilities.get_command_center()
+        cc = utilities.get_command_center(bot)
         if cc is None:
             return
 
         await self._upgrade_command_center(bot, iteration, cc)
 
     async def _upgrade_command_center(self, bot, iteration, cc):
-        if cc is UnitTypeId.ORBITALCOMMAND:
+        if cc.type_id is UnitTypeId.ORBITALCOMMAND:
             return
 
         if iteration % ORBITAL_UPGRADE_CHECK_DELAY != 0:

@@ -10,13 +10,13 @@ class WorkerAgent(Agent):
 
     async def on_step(self, bot, iteration):
         # Caso não exista CC, o agente não faz nada
-        cc = utilities.get_command_center()
+        cc = utilities.get_command_center(bot)
         if cc is None:
             return
 
         await self._refinery_assign_workers(bot)
         await self._mineral_assign_workers(bot, cc)
-        await self._mineral_assign_mules()
+        await self._mineral_assign_mules(bot, cc)
 
     # Verifica se alguma refinaria está sem a quantidade ideal de trabalhadores e redistribui, caso necessário
     async def _refinery_assign_workers(self, bot):
