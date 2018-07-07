@@ -30,8 +30,10 @@ class Agent:
                 handler = self._message_handlers[message_type]
                 handler(message[1])
 
+        self._messages = []
+
     def send(self, targets, message_type, *args):
-        if not isinstance(targets, list):
+        if not isinstance(targets, list) and targets is not None:
             targets = [targets]
 
         if targets is None:
