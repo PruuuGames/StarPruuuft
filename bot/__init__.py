@@ -1,4 +1,3 @@
 # re-export
-from .main import StarPruuuft
+from .main import MyBot
 from .dummy import Dummy
-from .agent import Agent
