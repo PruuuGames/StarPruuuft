@@ -4,7 +4,7 @@ from pathlib import Path
 
 import sc2
 
-from .starpruuuft.agent import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent
+from .starpruuuft import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent
 
 
 class MyBot(sc2.BotAI):

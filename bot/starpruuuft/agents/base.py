@@ -1,8 +1,7 @@
 import sc2
 from sc2.constants import *
-from sc2 import unit
 
-from bot.agent_message import AgentMessage
+from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
 
 
