@@ -9,4 +9,8 @@ def is_command_center(unit):
 
 def get_command_center(bot):
     command_center = bot.units().filter(lambda unit: is_command_center(unit))
-    return command_center.first
+
+    if command_center.exists:
+        return command_center.first
+    else:
+        return None
