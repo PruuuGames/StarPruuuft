@@ -29,7 +29,7 @@ class BaseAgent(Agent):
 
     async def _train_scvs(self, bot, cc):
         # Tenta esvaziar a fila para fazer upgrade
-        halt = self._upgrade_command_center_ready and cc is not UnitTypeId.ORBITALCOMMAND
+        halt = self._upgrade_command_center_ready and cc.type_id is not UnitTypeId.ORBITALCOMMAND
 
         # API não retorna corretamente a quantidade de workers, diferença de 2 observada
         train = bot.supply_left > 0 and bot.workers.amount < (23 - 2)
