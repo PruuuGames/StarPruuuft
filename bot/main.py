@@ -28,7 +28,7 @@ class MyBot(sc2.BotAI):
         loop = asyncio.get_event_loop()
         tasks = []
         for agent_ in self.agents.values():
-            tasks.append(loop.create_task(agent_.on_step(self, iteration)))
+            tasks.append(loop.create_task(agent_.agent_step(self, iteration)))
         done, pending = await asyncio.wait(tasks, timeout=2.0)
         for task in pending:
             task.cancel()

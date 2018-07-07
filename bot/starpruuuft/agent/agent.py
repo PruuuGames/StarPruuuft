@@ -35,3 +35,7 @@ class Agent:
 
     async def on_step(self, bot, iteration):
         raise NotImplementedError
+
+    async def agent_step(self, bot, iteration):
+        self._process_messages()
+        await self.on_step(bot, iteration)
