@@ -1,57 +1,37 @@
-import sc2
 from sc2.constants import *
 
-from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
+from .. import utilities
+
+ORBITAL_UPGRADE_CHECK_DELAY = 20
 
 
 class UpgradeAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
 
-        self._upgrade_command_center_ready = False
-        self._upgrade_command_center_done = False
-
-    def _process_messages(self):
-        if len(self._messages) == 0:
+    async def on_step(self, bot, iteration):
+        # Caso não exista CC, o agente não faz nada
+        cc = utilities.get_command_center()
+        if cc is None:
             return
 
-        for message in self._messages:
-            message_type = message[0]
+        await self._upgrade_command_center(bot, iteration, cc)
 
-            if message_type is AgentMessage.UPGRADE_COMMAND_CENTER_READY:
-                self._upgrade_command_center_ready = True
+    async def _upgrade_command_center(self, bot, iteration, cc):
+        if cc is UnitTypeId.ORBITALCOMMAND:
+            return
 
-        self._messages = []
+        if iteration % ORBITAL_UPGRADE_CHECK_DELAY != 0:
+            return
 
-    async def _upgrade_command_center(self, bot, cc):
-        if not self._upgrade_command_center_ready or self._upgrade_command_center_done:
+        # Se já estiver fazendo o upgrade, corta a execução
+        # todo
+
+        barracks = bot.units.filter(lambda unit: unit.is_ready and unit.type_id is UnitTypeId.BARRACKS)
+        if barracks.amount == 0:
             return
 
         # Hard coded value, since can_afford says that the upgrade needs 500 minerals
         if cc.noqueue and bot.can_afford(UnitTypeId.ORBITALCOMMAND):
             await bot.do(cc.train(UnitTypeId.ORBITALCOMMAND))
-
-            self._upgrade_command_center_done = True
-            self.send(["WorkerAgent", "BaseAgent"], AgentMessage.UPGRADE_COMMAND_CENTER_DONE)
-
-    async def on_step(self, bot, iteration):
-        """
-        :param sc2.BotAI bot:
-        :param iteration:
-        """
-
-        self._process_messages()
-
-        cc = (bot.units(UnitTypeId.COMMANDCENTER) | bot.units(UnitTypeId.ORBITALCOMMAND)).ready
-        if not cc.exists:
-            return
-        else:
-            cc = cc.first
-
-        # Quantidade bugada, não reconhece bem quantos trabalhadores tem quando tem SCV nas refinarias
-        if bot.supply_left > 0 and bot.workers.amount < 21 and cc.noqueue and bot.can_afford(
-                UnitTypeId.SCV):
-            await bot.do(cc.train(UnitTypeId.SCV))
-
-        await self._upgrade_command_center(bot, cc)
