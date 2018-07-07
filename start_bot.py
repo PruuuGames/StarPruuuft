@@ -1,5 +1,6 @@
 #!python3
 
+import sys
 import asyncio
 import logging
 import argparse
@@ -8,15 +9,14 @@ import sc2
 from sc2 import Race
 from sc2.player import Bot
 
-from bot import StarPruuuft
-
+from bot import MyBot
 
 def main(is_master, map_name, races, portconfig, replay_path, log_path, step_time_limit=None, game_time_limit=None):
     portconfig = sc2.portconfig.Portconfig.from_json(portconfig)
     i = 0 if is_master else 1
 
     player_config = [Bot(Race[r], None) for r in races]
-    player_config[i].ai = StarPruuuft()
+    player_config[i].ai = MyBot()
 
     if log_path is not None:
         logger = logging.getLogger("sc2")
@@ -47,7 +47,6 @@ def main(is_master, map_name, races, portconfig, replay_path, log_path, step_tim
 
     result = asyncio.get_event_loop().run_until_complete(g)
     print(result)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run a game against external server')

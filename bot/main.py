@@ -7,7 +7,7 @@ import sc2
 from .agent import *
 
 
-class StarPruuuft(sc2.BotAI):
+class MyBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
         NAME = json.load(f)["name"]
 
