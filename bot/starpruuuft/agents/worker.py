@@ -34,7 +34,7 @@ class WorkerAgent(Agent):
     # Envia todas as MULEs em idle para minerar
     async def _mineral_assign_mules(self, bot, cc):
         # Caso não tenha o upgrade do orbital, não podem haver MULEs
-        if cc is not UnitTypeId.ORBITALCOMMAND:
+        if cc.type_id is not UnitTypeId.ORBITALCOMMAND:
             return
 
         for mule in bot.units(UnitTypeId.MULE).idle:
