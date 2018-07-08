@@ -20,8 +20,7 @@ class MilitarAgent(Agent):
         self._medivac = 0
         self._liberator = 0
 
-        self._medivac_load = {}
-        self._medivac_loaded = set()
+        self._medivac_cargo = {}
 
     async def on_step(self, bot, iteration):
         await self._train_marine(bot)
@@ -73,16 +72,15 @@ class MilitarAgent(Agent):
 
     async def _load_medivac(self, bot):
         for medivac in bot.units(UnitTypeId.MEDIVAC).idle:
-            load = self._medivac_load.setdefault(medivac.tag, {
+            cargo = self._medivac_cargo.setdefault(medivac.tag, {
                 UnitTypeId.MARINE: 2,
                 UnitTypeId.MARAUDER: 1,
                 UnitTypeId.SIEGETANK: 1})
-            for unitType in load.keys():
-                for unit in bot.units(unitType).idle:
-                    if load[unitType] and unit.tag not in self._medivac_loaded:
+            for unit_type in cargo.keys():
+                for unit in bot.units(unit_type).idle:
+                    if cargo[unit_type]:
                         await bot.do(medivac(AbilityId.LOAD_MEDIVAC, unit))
-                        self._medivac_loaded.add(unit.tag)
-                        load[unitType] -= 1
+                        cargo[unit_type] -= 1
                         return
 
     def _cache(self, bot):
