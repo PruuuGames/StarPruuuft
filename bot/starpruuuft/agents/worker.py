@@ -20,7 +20,7 @@ class WorkerAgent(Agent):
 
     # Verifica se alguma refinaria está sem a quantidade ideal de trabalhadores e redistribui, caso necessário
     async def _refinery_assign_workers(self, bot):
-        for refinery in bot.units(UnitTypeId.REFINERY).ready:
+        for refinery in bot.get_units(UnitTypeId.REFINERY):
             if refinery.assigned_harvesters < refinery.ideal_harvesters:
                 worker = bot.workers.closer_than(20, refinery)
                 if worker.exists:
@@ -28,7 +28,7 @@ class WorkerAgent(Agent):
 
     # Envia todos os SCVs em idle para minerar
     async def _mineral_assign_workers(self, bot, cc):
-        for scv in bot.units(UnitTypeId.SCV).idle:
+        for scv in bot.get_units(UnitTypeId.SCV).idle:
             await bot.do(scv.gather(bot.state.mineral_field.closest_to(cc)))
 
     # Envia todas as MULEs em idle para minerar
@@ -37,6 +37,6 @@ class WorkerAgent(Agent):
         if cc.type_id is not UnitTypeId.ORBITALCOMMAND:
             return
 
-        for mule in bot.units(UnitTypeId.MULE).idle:
+        for mule in bot.get_units(UnitTypeId.MULE).idle:
             await bot.do(mule(AbilityId.HARVEST_GATHER_MULE, bot.state.mineral_field.closest_to(cc)))
 

@@ -2,9 +2,7 @@ from sc2.constants import *
 
 from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
-from .. import utilities
-
-SUPPLY_DEPOT_DANGER_DISTANCE = 11
+from .. import utilities, constants as pru
 
 
 class StrategyAgent(Agent):
@@ -28,7 +26,7 @@ class StrategyAgent(Agent):
         ramp_depots = bot.units.filter(lambda unit: unit.tag in self._ramp_supply_depots)
         lowered_depots = ramp_depots.filter(lambda unit: unit.type_id is UnitTypeId.SUPPLYDEPOTLOWERED)
         raised_depots = ramp_depots.filter(lambda unit: unit.type_id is UnitTypeId.SUPPLYDEPOT)
-        enemies_near = utilities.any_enemies_near(bot, lowered_depots | raised_depots, SUPPLY_DEPOT_DANGER_DISTANCE)
+        enemies_near = utilities.any_enemies_near(bot, lowered_depots | raised_depots, pru.SUPPLY_DEPOT_DANGER_DISTANCE)
         morphing = []
 
         # Caso o estado dos depots deva mudar

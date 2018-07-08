@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import sc2
+from sc2.units import Units
 
 from .starpruuuft import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent, MilitarAgent
 
@@ -14,8 +15,30 @@ class MyBot(sc2.BotAI):
     def __init__(self):
         self.agents = {}
 
+        self._unit_by_tag = {}
+        self._units_ready = {}
+        self._units_not_ready = {}
+
     def add_agent(self, agent_):
         self.agents[agent_.name()] = agent_
+
+    def get_unit(self, tag):
+        return self._unit_by_tag[tag]
+
+    # Retorna a lista de unidades com o tipo escolhido ou uma lista vazia
+    def get_units(self, unit_types, ready=True):
+        result = []
+
+        if not isinstance(unit_types, list):
+            unit_types = [unit_types]
+
+        for unit_type in unit_types:
+            if ready and unit_type in self._units_ready:
+                    result.extend(self._units_ready[unit_type])
+            elif not ready and unit_type in self._units_not_ready:
+                    result.extend(self._units_not_ready[unit_type])
+
+        return Units(result, self._game_data)
 
     def on_start(self):
         self.add_agent(StrategyAgent(self))
@@ -26,6 +49,8 @@ class MyBot(sc2.BotAI):
         self.add_agent(MilitarAgent(self))
 
     async def on_step(self, iteration):
+        self._update_units_count()
+
         loop = asyncio.get_event_loop()
         tasks = []
         for agent_ in self.agents.values():
@@ -33,3 +58,26 @@ class MyBot(sc2.BotAI):
         done, pending = await asyncio.wait(tasks, timeout=2.0)
         for task in pending:
             task.cancel()
+
+    def _update_units_count(self):
+        self._unit_by_tag = {}
+        self._units_ready = {}
+        self._units_not_ready = {}
+
+        # Prepara a lista normal das unidades
+        for unit in self.units:
+            self._unit_by_tag[unit.tag] = unit
+
+            if not unit.is_mine:
+                continue
+
+            unit_type = unit.type_id
+
+            if unit_type not in self._units_ready:
+                self._units_ready[unit_type] = []
+                self._units_not_ready[unit_type] = []
+
+            if unit.is_ready:
+                self._units_ready[unit_type].append(unit)
+            else:
+                self._units_not_ready[unit_type].append(unit)

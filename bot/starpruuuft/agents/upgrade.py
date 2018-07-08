@@ -1,9 +1,7 @@
 from sc2.constants import *
 
 from .agent import Agent
-from .. import utilities
-
-ORBITAL_UPGRADE_CHECK_DELAY = 20
+from .. import utilities, constants as pru
 
 
 class UpgradeAgent(Agent):
@@ -19,16 +17,13 @@ class UpgradeAgent(Agent):
         await self._upgrade_command_center(bot, iteration, cc)
 
     async def _upgrade_command_center(self, bot, iteration, cc):
+        if iteration % pru.ORBITAL_UPGRADE_CHECK_DELAY != 0:
+            return
+
         if cc.type_id is UnitTypeId.ORBITALCOMMAND:
             return
 
-        if iteration % ORBITAL_UPGRADE_CHECK_DELAY != 0:
-            return
-
-        # Se já estiver fazendo o upgrade, corta a execução
-        # todo
-
-        barracks = bot.units.filter(lambda unit: unit.is_ready and unit.type_id is UnitTypeId.BARRACKS)
+        barracks = bot.get_units(UnitTypeId.BARRACKS)
         if barracks.amount == 0:
             return
 
