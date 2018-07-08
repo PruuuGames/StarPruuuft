@@ -11,16 +11,20 @@ class BuilderAgent(Agent):
         super().__init__(bot)
 
         self.add_message_handler(AgentMessage.ENEMIES_CLOSE, self._handle_enemies_near)
+        self.add_message_handler(AgentMessage.BUILD_BARRACKS, self._handle_build_barracks)
 
         self._tracked_depots = []
         self._depots_locations = None
         self._supply_depots_raised = False
 
+        self._can_build_barracks_techlab = False
+        self._can_build_barracks_reactor = False
+
         self._supply_depot = 0
         self._refinery = 0
         self._barracks = 0
         self._barracks_tech = 0
-        self._barracks_reactor = 0;
+        self._barracks_reactor = 0
         self._factory = 0
         self._factory_tech = 0
         self._starport = 0
@@ -57,6 +61,10 @@ class BuilderAgent(Agent):
     # Reconhece um depot localizado na rampa
     def _handle_enemies_near(self, *args):
         self._supply_depots_raised = args[0]
+
+    def _handle_build_barracks(self, *args):
+        self._can_build_barracks_reactor = True
+        self._can_build_barracks_techlab = True
 
     # Faz o cache da localização dos depots de rampa
     def _setup_depos(self, bot):
@@ -150,7 +158,12 @@ class BuilderAgent(Agent):
             await bot.build(UnitTypeId.BARRACKS, near=cc.position.towards(bot.game_info.map_center, 6))
 
     async def _build_barracks_tech(self, bot):
-        if self._barracks_tech > 0 or self._barracks == 0:
+        if (self._barracks_tech > 0 or self._barracks == 0) and not self._can_build_barracks_techlab:
+            return
+
+        if self._barracks_tech > 0: ##
+            self._can_build_barracks_techlab = False
+            self.send("MilitarAgent", AgentMessage.BARRACKS_TECHLAB_READY)
             return
 
         for barrack in bot.units(UnitTypeId.BARRACKS).ready:
@@ -160,7 +173,12 @@ class BuilderAgent(Agent):
                 break
 
     async def _build_barracks_reactor(self, bot):
-        if self._barracks_reactor > 0 or self._barracks < 2:
+        if (self._barracks_reactor > 0 or self._barracks < 2) and not self._can_build_barracks_reactor:
+            return
+
+        if self._barracks_reactor > 0: ##
+            self._can_build_barracks_reactor = False
+            self.send("MilitarAgent", AgentMessage.BARRACKS_REACTOR_READY)
             return
 
         for barrack in bot.units(UnitTypeId.BARRACKS).ready:

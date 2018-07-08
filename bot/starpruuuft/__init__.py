@@ -1,1 +1,1 @@
-from .agents import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent
+from .agents import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent, MilitarAgent

@@ -5,3 +5,4 @@ from .worker import WorkerAgent
 from .builder import BuilderAgent
 from .strategy import StrategyAgent
 from .upgrade import UpgradeAgent
+from .militar import MilitarAgent
