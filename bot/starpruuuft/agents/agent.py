@@ -47,9 +47,13 @@ class Agent:
     def broadcast(self, message_type, *args):
         self.send(None, message_type, *args)
 
+    def _cache(self, bot):
+        pass
+
     async def on_step(self, bot, iteration):
         raise NotImplementedError
 
     async def agent_step(self, bot, iteration):
         self._process_messages()
+        self._cache(bot)
         await self.on_step(bot, iteration)
