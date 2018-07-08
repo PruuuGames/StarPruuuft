@@ -5,7 +5,7 @@ from pathlib import Path
 import sc2
 from sc2.units import Units
 
-from .starpruuuft import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent, MilitarAgent
+from .starpruuuft import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent, MilitarAgent, DefenceAgent
 
 
 class MyBot(sc2.BotAI):
@@ -47,6 +47,7 @@ class MyBot(sc2.BotAI):
         self.add_agent(WorkerAgent(self))
         self.add_agent(UpgradeAgent(self))
         self.add_agent(MilitarAgent(self))
+        self.add_agent(DefenceAgent(self))
 
     async def on_step(self, iteration):
         self._update_units_count()
