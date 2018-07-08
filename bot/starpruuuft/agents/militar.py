@@ -35,8 +35,13 @@ class MilitarAgent(Agent):
         if structure is None or not structure.is_ready or bot.supply_left == 0:
             return
 
-        if current_amount >= max_amount or not structure.noqueue:
+        if current_amount >= max_amount:
             return
+        else:
+            if (structure is self._barracks_reactor or structure is self._starport_reactor) and len(structure.orders) <= 1:
+                pass
+            elif not structure.noqueue:
+                return
 
         if bot.can_afford(unit_type):
             await bot.do(structure.train(unit_type))
@@ -53,6 +58,9 @@ class MilitarAgent(Agent):
                     return
 
         await self._train(bot, UnitTypeId.MARINE, structure, self._marine, pru.MARINE_MAX_AMOUNT)
+
+        if structure is self._barracks_reactor and self._marauder >= pru.MARAUDERS_MAX_AMOUNT:
+            await self._train(bot, UnitTypeId.MARINE, self._barracks_tech, self._marine, pru.MARINE_MAX_AMOUNT)
 
     async def _train_marauder(self, bot):
         if self._barracks_tech is None:
