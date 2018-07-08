@@ -3,7 +3,7 @@ import json
 from sc2 import run_game, maps, Race
 from sc2.player import Bot
 
-from bot import MyBot
+from bot import MyBot, Dummy
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
     race = Race[info["race"]]
 
     run_game(maps.get("Abyssal Reef LE"), [
-        Bot(Race.Zerg, Dummy()),
+        Bot(Race.Terran, Dummy()),
         Bot(race, MyBot())
     ], realtime=True, game_time_limit=(60*10), save_replay_as="test.SC2Replay")
 
