@@ -1,4 +1,6 @@
 from sc2.constants import *
+from sc2.position import Point2
+from math import pi
 
 from .agent import Agent
 from .. import utilities, constants as pru
@@ -7,49 +9,42 @@ from .. import utilities, constants as pru
 class DefenceAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
-        pass
-
-        # self._barracks_clear = None
-        # self._barracks_tech = None
-        # self._barracks_reactor = None
-        # self._factory_tech = None
-        # self._starport_reactor = None
-
-        # self._marine = 0
-        # self._marauder = 0
-        # self._siege_tank = 0
-        # self._medivac = 0
-        # self._liberator = 0
-
-        # self._medivac_cargo = {}
+        self._upper = None
+        self._center = None
+        self._near_ramp = set()
 
     async def on_step(self, bot, iteration):
-        pass
-        # await self._train_marine(bot)
-        # await self._train_marauder(bot)
-        # await self._train(bot, UnitTypeId.SIEGETANK, self._factory_tech, self._siege_tank, pru.SIEGE_TANK_MAX_AMOUNT)
-        # await self._train(bot, UnitTypeId.MEDIVAC, self._starport_reactor, self._medivac, pru.MEDIVAC_MAX_AMOUNT)
-        # await self._train(bot, UnitTypeId.LIBERATOR, self._starport_reactor, self._liberator, pru.LIBERATOR_MAX_AMOUNT)
-        # await self._load_medivac(bot)
+        await self._defence(bot, UnitTypeId.SIEGETANK)
+        await self._defence(bot, UnitTypeId.LIBERATOR)
+        await self._defence(bot, UnitTypeId.MARAUDER)
+        await self._defence(bot, UnitTypeId.MEDIVAC)
+        await self._defence(bot, UnitTypeId.MARINE)
 
-    def _cache(self, bot):
-        pass
-        # self._barracks_clear, self._barracks_tech, self._barracks_reactor = utilities.get_barracks(bot)
-        # _, self._factory_tech = utilities.get_factory(bot)
-        # _, self._starport_reactor = utilities.get_starport(bot)
+    def _get_points(self, bot):
+        points = bot.main_base_ramp.points
+        minx = min(p.x for p in points)
+        miny = min(p.y for p in points)
+        maxx = max(p.x for p in points)
+        maxy = max(p.y for p in points)
+        return Point2(((maxx+minx)/2, (maxy+miny)/2))
+        
+    async def _defence(self, bot, unit_type):
+        if self._upper is None or self._center is None:
+            x_axis = [max({p.x for p in d}) for d in bot.main_base_ramp.top_wall_depos ]
+            y_axis = [min({p.y for p in d}) for d in bot.main_base_ramp.top_wall_depos ]
+            self._upper = Point2((sum(x_axis)/len(x_axis), sum(y_axis)/len(y_axis)))
+            self._center = self._get_points(bot)
+        for unit in bot.units(unit_type).idle:
+            if unit.tag not in self._near_ramp:
+                position = self._center.towards_with_random_angle(self._upper, distance=7, max_difference=(pi/4))
+                await bot.do(unit.move(position))
+                self._near_ramp.add(unit.tag)
 
-        # self._marine = bot.get_units(UnitTypeId.MARINE).amount
-        # self._marauder = bot.get_units(UnitTypeId.MARAUDER).amount
-        # self._siege_tank = bot.get_units(UnitTypeId.SIEGETANK).amount
-        # self._siege_tank += bot.get_units(UnitTypeId.SIEGETANKSIEGED).amount
-        # self._medivac = bot.get_units(UnitTypeId.MEDIVAC).amount
-        # self._liberator = bot.get_units(UnitTypeId.LIBERATOR).amount
-        # self._liberator += bot.get_units(UnitTypeId.LIBERATORAG).amount
 
-        # self._marine += bot.get_units(UnitTypeId.MARINE, ready=False).amount
-        # self._marauder += bot.get_units(UnitTypeId.MARAUDER, ready=False).amount
-        # self._siege_tank += bot.get_units(UnitTypeId.SIEGETANK, ready=False).amount
-        # self._siege_tank += bot.get_units(UnitTypeId.SIEGETANKSIEGED, ready=False).amount
-        # self._medivac += bot.get_units(UnitTypeId.MEDIVAC, ready=False).amount
-        # self._liberator += bot.get_units(UnitTypeId.LIBERATOR, ready=False).amount
-        # self._liberator += bot.get_units(UnitTypeId.LIBERATORAG, ready=False).amount
+# self._depots_locations = [
+#     Point2((max({p.x for p in d}), min({p.y for p in d})))
+#     for d in bot.main_base_ramp.top_wall_depos
+# ]
+
+# [(147, 26), (146, 24), (144, 23)]
+
