@@ -16,21 +16,33 @@ class DefenceAgent(Agent):
         self._upper = None
         self._center = None
         self._near_ramp = set()
+        self._structures = [
+            UnitTypeId.COMMANDCENTER,
+            UnitTypeId.ORBITALCOMMAND,
+            UnitTypeId.BARRACKS,
+            UnitTypeId.BARRACKSTECHLAB,
+            UnitTypeId.BARRACKSREACTOR,
+            UnitTypeId.FACTORY,
+            UnitTypeId.FACTORYTECHLAB,
+            UnitTypeId.STARPORT,
+            UnitTypeId.STARPORTREACTOR,
+            UnitTypeId.REFINERY,
+            UnitTypeId.SUPPLYDEPOT,
+            UnitTypeId.SUPPLYDEPOTLOWERED]
+        self._militars = [
+            UnitTypeId.SIEGETANK,
+            UnitTypeId.LIBERATOR,
+            UnitTypeId.MARAUDER,
+            UnitTypeId.MEDIVAC,
+            UnitTypeId.MARINE]
 
         self._attacking = False
 
     async def on_step(self, bot, iteration):
-        await self._defence(bot, UnitTypeId.SIEGETANK)
-        await self._defence(bot, UnitTypeId.LIBERATOR)
-        await self._defence(bot, UnitTypeId.MARAUDER)
-        await self._defence(bot, UnitTypeId.MEDIVAC)
-        await self._defence(bot, UnitTypeId.MARINE)
-
-        if not self._attacking:
-            await self._transform_siege(bot)
-
-    def _handle_attacking(self, *args):
-        self._attacking = args[0][0]
+        for unit_type in self._militars:
+            await self._defence(bot, unit_type)
+        await self._transform_siege(bot)
+        # await _under_attack(self, bot)
 
     def _get_points(self, bot):
         points = bot.main_base_ramp.points
@@ -59,3 +71,12 @@ class DefenceAgent(Agent):
                     await bot.do(unit(AbilityId.SIEGEMODE_SIEGEMODE))
                 except AssertionError:
                     pass
+
+    # async def _under_attack(self, bot):
+    #     units = []
+    #     for unit_type in self._structures:
+    #         units |= bot.get_units(unit_type)
+    #     enemy = utilities.any_enemies_near_location(bot, units, pru.SUPPLY_DEPOT_DANGER_DISTANCE)
+    #     for unit_type in self._militars:
+    #         for unit in bot.get_units(unit_type):
+    #             await bot.do(unit.move(enemy))
