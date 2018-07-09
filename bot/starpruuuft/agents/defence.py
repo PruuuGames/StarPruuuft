@@ -1,18 +1,23 @@
-from sc2.constants import *
-from sc2.position import Point2
 from math import pi
 
+from sc2.constants import *
+from sc2.position import Point2
+
+from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
-from .. import utilities, constants as pru
 
 
 class DefenceAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
+
+        self.add_message_handler(AgentMessage.ATTACKING, self._handle_attacking)
+
         self._upper = None
         self._center = None
-        self._sieged = set()
         self._near_ramp = set()
+
+        self._attacking = False
 
     async def on_step(self, bot, iteration):
         await self._defence(bot, UnitTypeId.SIEGETANK)
@@ -20,7 +25,12 @@ class DefenceAgent(Agent):
         await self._defence(bot, UnitTypeId.MARAUDER)
         await self._defence(bot, UnitTypeId.MEDIVAC)
         await self._defence(bot, UnitTypeId.MARINE)
-        await self._transform_siege(bot)
+
+        if not self._attacking:
+            await self._transform_siege(bot)
+
+    def _handle_attacking(self, *args):
+        self._attacking = args[0][0]
 
     def _get_points(self, bot):
         points = bot.main_base_ramp.points
@@ -29,11 +39,11 @@ class DefenceAgent(Agent):
         maxx = max(p.x for p in points)
         maxy = max(p.y for p in points)
         return Point2(((maxx+minx)/2, (maxy+miny)/2))
-        
+
     async def _defence(self, bot, unit_type):
         if self._upper is None or self._center is None:
-            x_axis = [ max({p.x for p in d}) for d in bot.main_base_ramp.top_wall_depos ]
-            y_axis = [ min({p.y for p in d}) for d in bot.main_base_ramp.top_wall_depos ]
+            x_axis = [max({p.x for p in d}) for d in bot.main_base_ramp.top_wall_depos]
+            y_axis = [min({p.y for p in d}) for d in bot.main_base_ramp.top_wall_depos]
             self._upper = Point2((sum(x_axis)/len(x_axis), sum(y_axis)/len(y_axis)))
             self._center = self._get_points(bot)
         for unit in bot.units(unit_type).idle:
@@ -44,20 +54,8 @@ class DefenceAgent(Agent):
 
     async def _transform_siege(self, bot):
         for unit in bot.units(UnitTypeId.SIEGETANK).idle:
-            if unit.tag in self._near_ramp and unit.tag not in self._sieged:
+            if unit.tag in self._near_ramp and unit.tag:
                 try:
                     await bot.do(unit(AbilityId.SIEGEMODE_SIEGEMODE))
-                    self._sieged.add(unit.tag)
                 except AssertionError:
                     pass
-
-
-
-
-# self._depots_locations = [
-#     Point2((max({p.x for p in d}), min({p.y for p in d})))
-#     for d in bot.main_base_ramp.top_wall_depos
-# ]
-
-# [(147, 26), (146, 24), (144, 23)]
-

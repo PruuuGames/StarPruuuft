@@ -3,7 +3,7 @@ from sc2.position import Point2
 
 from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
-from .. import utilities, constants as pru
+from .. import utilities
 
 
 class BuilderAgent(Agent):
@@ -116,7 +116,7 @@ class BuilderAgent(Agent):
         if self._refineries.amount >= 2:
             return
 
-        if self._barracks_clear is None and self._barracks_tech is None:
+        if self._refineries.amount == 1 and self._barracks_clear is None and self._barracks_tech is None:
             return
 
         # Permite a construção de até 2 refinarias por vez
@@ -158,7 +158,7 @@ class BuilderAgent(Agent):
         if self._barracks_tech is not None or self._barracks_clear is None:
             return
 
-        if self._barracks_clear is None or self._marine < pru.MARINE_INITIAL_AMOUNT:
+        if self._barracks_clear is None:
             return
 
         if bot.already_pending(UnitTypeId.BARRACKSTECHLAB) < 1 and bot.can_afford(UnitTypeId.BARRACKSTECHLAB):
@@ -178,7 +178,7 @@ class BuilderAgent(Agent):
         if self._factory_clear is not None or self._factory_tech is not None:
             return
 
-        if self._barracks_tech is None or self._marine < pru.MARINE_INITIAL_AMOUNT:
+        if self._barracks_tech is None:
             return
 
         if bot.already_pending(UnitTypeId.FACTORY) < 1 and bot.can_afford(UnitTypeId.FACTORY):

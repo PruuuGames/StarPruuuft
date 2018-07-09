@@ -4,6 +4,14 @@ from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
 from .. import constants as pru
 
+ATTACK_UNITS = [
+    UnitTypeId.MARINE,
+    UnitTypeId.MARAUDER,
+    UnitTypeId.SIEGETANK,
+    UnitTypeId.MEDIVAC,
+    UnitTypeId.LIBERATOR,
+]
+
 
 class AttackAgent(Agent):
     def __init__(self, bot):
@@ -18,21 +26,37 @@ class AttackAgent(Agent):
 
         self._medivac_cargo = {}
         self._mounted = {}
+        self._mounted_counter = 0
 
         self._attack_is_ready = False
         self._attacking = False
+        self._units_loaded = False
 
     async def on_step(self, bot, iteration):
-        if not self._attack_is_ready:
+        if not self._attack_is_ready and not self._attacking:
             return
 
         if not self._attacking:
             self._attacking = True
-            self.broadcast(AgentMessage.ATTACKING)
+            self.broadcast(AgentMessage.ATTACKING, True)
             return
 
-        await self._unsiege_sieges(bot)
-        await self._load_medivac(bot)
+        if self._mounted_counter < 8:
+            await self._unsiege_sieges(bot)
+            await self._load_medivac(bot)
+        else:
+            target = bot.known_enemy_structures.random_or(bot.enemy_start_locations[0]).position
+
+            for medivac in bot.get_units(UnitTypeId.MEDIVAC):
+                if medivac.tag in self._medivac_cargo:
+                    medivac_pos = medivac.position.to2
+                    if target.distance_to(medivac_pos) <= 10:
+                        await bot.do(medivac(AbilityId.UNLOADALLAT, medivac.position))
+                        del self._medivac_cargo[medivac.tag]
+
+            for unit in bot.get_units(ATTACK_UNITS).idle:
+                await bot.do(unit.attack(target))
+                return
 
     async def _unsiege_sieges(self, bot):
         for sieged in bot.get_units(UnitTypeId.SIEGETANKSIEGED):
@@ -51,6 +75,7 @@ class AttackAgent(Agent):
                         await bot.do(medivac(AbilityId.LOAD_MEDIVAC, unit))
                         self._mounted.setdefault(unit_type, 0)
                         self._mounted[unit_type] += 1
+                        self._mounted_counter += 1
                         cargo[unit_type] -= 1
                         return
 

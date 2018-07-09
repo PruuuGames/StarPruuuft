@@ -17,6 +17,19 @@ class StrategyAgent(Agent):
     async def on_step(self, bot, iteration):
         await self._handle_supply_depots(bot)
 
+        game_time = bot.state.game_loop / 22.4
+
+        if game_time == 0:
+            await bot.chat_send("(Good Luck. Have Fun.)")
+        elif game_time == 60:
+            await bot.chat_send("(Still alive? I'm Disappointed.)")
+        elif game_time == 120:
+            await bot.chat_send("(Come on. You're better than this.)")
+        elif game_time == 180:
+            await bot.chat_send("(Pruu)")
+        elif game_time == 240:
+            await bot.chat_send("The cake is a lie.")
+
     # Reconhece um depot localizado na rampa
     def _handle_ramp_supply_depot(self, *args):
         self._ramp_supply_depots.append(args[0][0])

@@ -1,7 +1,8 @@
 from sc2.constants import *
 
+from bot.starpruuuft.agent_message import AgentMessage
 from .agent import Agent
-from .. import utilities, constants as pru
+from .. import constants as pru, utilities
 
 SUPPLY_USAGE = {
     UnitTypeId.MARINE: 1,
@@ -16,6 +17,8 @@ class MilitarAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
 
+        self.add_message_handler(AgentMessage.BARRACKS_READY, self._handle_barracks_ready)
+
         self._barracks_clear = None
         self._barracks_tech = None
         self._barracks_reactor = None
@@ -27,7 +30,8 @@ class MilitarAgent(Agent):
         self._siege_tank = 0
         self._medivac = 0
         self._liberator = 0
-        self._barracks_ready = 0
+
+        self._barracks_ready = False
 
         self._medivac_cargo = {}
 
@@ -37,6 +41,9 @@ class MilitarAgent(Agent):
         await self._train(bot, UnitTypeId.SIEGETANK, self._factory_tech, self._siege_tank, pru.SIEGE_TANK_MAX_AMOUNT)
         await self._train(bot, UnitTypeId.MEDIVAC, self._starport_reactor, self._medivac, pru.MEDIVAC_MAX_AMOUNT)
         await self._train(bot, UnitTypeId.LIBERATOR, self._starport_reactor, self._liberator, pru.LIBERATOR_MAX_AMOUNT)
+
+    def _handle_barracks_ready(self, *args):
+        self._barracks_ready = True
 
     async def _train(self, bot, unit_type, structure, current_amount, max_amount):
         if structure is None or not structure.is_ready or bot.supply_left < SUPPLY_USAGE[unit_type]:
@@ -54,8 +61,8 @@ class MilitarAgent(Agent):
     async def _train_marine(self, bot):
         structure = self._barracks_clear
 
-        if self._barracks_ready > 1 and structure is not None:
-            structure = None
+        if not self._barracks_ready and structure is not None:
+            return
 
         if self._barracks_clear is None:
             if self._barracks_reactor is not None:
@@ -83,8 +90,6 @@ class MilitarAgent(Agent):
         self._barracks_clear, self._barracks_tech, self._barracks_reactor = utilities.get_barracks(bot)
         _, self._factory_tech = utilities.get_factory(bot)
         _, self._starport_reactor = utilities.get_starport(bot)
-
-        self._barracks_ready = len((bot.units(UnitTypeId.BARRACKS)).ready)
 
         self._marine = bot.get_units(UnitTypeId.MARINE).amount
         self._marauder = bot.get_units(UnitTypeId.MARAUDER).amount
