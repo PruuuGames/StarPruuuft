@@ -41,8 +41,13 @@ class DefenceAgent(Agent):
     async def on_step(self, bot, iteration):
         for unit_type in self._militars:
             await self._defence(bot, unit_type)
-        await self._transform_siege(bot)
+
+        if not self._attacking:
+            await self._transform_siege(bot)
         # await _under_attack(self, bot)
+
+    def _handle_attacking(self, *args):
+        self._attacking = args[0][0]
 
     def _get_points(self, bot):
         points = bot.main_base_ramp.points

@@ -50,7 +50,7 @@ class AttackAgent(Agent):
             for medivac in bot.get_units(UnitTypeId.MEDIVAC):
                 if medivac.tag in self._medivac_cargo:
                     medivac_pos = medivac.position.to2
-                    if target.distance_to(medivac_pos) <= 10:
+                    if target.distance_to(medivac_pos) <= 7:
                         await bot.do(medivac(AbilityId.UNLOADALLAT, medivac.position))
                         del self._medivac_cargo[medivac.tag]
 

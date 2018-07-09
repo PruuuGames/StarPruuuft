@@ -10,7 +10,6 @@ from .starpruuuft import StrategyAgent
 from .starpruuuft import BaseAgent
 from .starpruuuft import BuilderAgent
 from .starpruuuft import WorkerAgent
-from .starpruuuft import UpgradeAgent
 from .starpruuuft import MilitarAgent
 from .starpruuuft import DefenceAgent
 from .starpruuuft import AttackAgent
@@ -60,7 +59,6 @@ class MyBot(sc2.BotAI):
         self.add_agent(BaseAgent(self))
         self.add_agent(BuilderAgent(self))
         self.add_agent(WorkerAgent(self))
-        self.add_agent(UpgradeAgent(self))
         self.add_agent(MilitarAgent(self))
         self.add_agent(DefenceAgent(self))
         self.add_agent(AttackAgent(self))
