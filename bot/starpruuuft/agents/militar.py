@@ -19,6 +19,9 @@ class MilitarAgent(Agent):
         self._siege_tank = 0
         self._medivac = 0
         self._liberator = 0
+        self._barracks_ready = 0
+
+        self._medivac_cargo = {}
 
     async def on_step(self, bot, iteration):
         await self._train_marine(bot)
@@ -26,19 +29,28 @@ class MilitarAgent(Agent):
         await self._train(bot, UnitTypeId.SIEGETANK, self._factory_tech, self._siege_tank, pru.SIEGE_TANK_MAX_AMOUNT)
         await self._train(bot, UnitTypeId.MEDIVAC, self._starport_reactor, self._medivac, pru.MEDIVAC_MAX_AMOUNT)
         await self._train(bot, UnitTypeId.LIBERATOR, self._starport_reactor, self._liberator, pru.LIBERATOR_MAX_AMOUNT)
+        await self._load_medivac(bot)
 
     async def _train(self, bot, unit_type, structure, current_amount, max_amount):
         if structure is None or not structure.is_ready or bot.supply_left == 0:
             return
 
-        if current_amount >= max_amount or not structure.noqueue:
+        if current_amount >= max_amount:
             return
+        else:
+            if (structure is self._barracks_reactor or structure is self._starport_reactor) and len(structure.orders) <= 1:
+                pass
+            elif not structure.noqueue:
+                return
 
         if bot.can_afford(unit_type):
             await bot.do(structure.train(unit_type))
 
     async def _train_marine(self, bot):
         structure = self._barracks_clear
+
+        if self._barracks_ready > 1 and structure is not None:
+            structure = None
 
         if self._barracks_clear is None:
             if self._barracks_reactor is not None:
@@ -50,6 +62,9 @@ class MilitarAgent(Agent):
 
         await self._train(bot, UnitTypeId.MARINE, structure, self._marine, pru.MARINE_MAX_AMOUNT)
 
+        if structure is self._barracks_reactor and self._marauder >= pru.MARAUDERS_MAX_AMOUNT:
+            await self._train(bot, UnitTypeId.MARINE, self._barracks_tech, self._marine, pru.MARINE_MAX_AMOUNT)
+
     async def _train_marauder(self, bot):
         if self._barracks_tech is None:
             return
@@ -59,10 +74,25 @@ class MilitarAgent(Agent):
 
         await self._train(bot, UnitTypeId.MARAUDER, self._barracks_tech, self._marauder, pru.MARAUDERS_MAX_AMOUNT)
 
+    async def _load_medivac(self, bot):
+        for medivac in bot.units(UnitTypeId.MEDIVAC).idle:
+            cargo = self._medivac_cargo.setdefault(medivac.tag, {
+                UnitTypeId.MARINE: 2,
+                UnitTypeId.MARAUDER: 1,
+                UnitTypeId.SIEGETANK: 1})
+            for unit_type in cargo.keys():
+                for unit in bot.units(unit_type).idle:
+                    if cargo[unit_type]:
+                        await bot.do(medivac(AbilityId.LOAD_MEDIVAC, unit))
+                        cargo[unit_type] -= 1
+                        return
+
     def _cache(self, bot):
         self._barracks_clear, self._barracks_tech, self._barracks_reactor = utilities.get_barracks(bot)
         _, self._factory_tech = utilities.get_factory(bot)
         _, self._starport_reactor = utilities.get_starport(bot)
+
+        self._barracks_ready = len((bot.units(UnitTypeId.BARRACKS)).ready)
 
         self._marine = bot.get_units(UnitTypeId.MARINE).amount
         self._marauder = bot.get_units(UnitTypeId.MARAUDER).amount
