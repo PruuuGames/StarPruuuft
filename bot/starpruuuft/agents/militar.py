@@ -3,6 +3,14 @@ from sc2.constants import *
 from .agent import Agent
 from .. import utilities, constants as pru
 
+SUPPLY_USAGE = {
+    UnitTypeId.MARINE: 1,
+    UnitTypeId.MARAUDER: 2,
+    UnitTypeId.SIEGETANK: 3,
+    UnitTypeId.MEDIVAC: 2,
+    UnitTypeId.LIBERATOR: 3,
+}
+
 
 class MilitarAgent(Agent):
     def __init__(self, bot):
@@ -29,21 +37,18 @@ class MilitarAgent(Agent):
         await self._train(bot, UnitTypeId.SIEGETANK, self._factory_tech, self._siege_tank, pru.SIEGE_TANK_MAX_AMOUNT)
         await self._train(bot, UnitTypeId.MEDIVAC, self._starport_reactor, self._medivac, pru.MEDIVAC_MAX_AMOUNT)
         await self._train(bot, UnitTypeId.LIBERATOR, self._starport_reactor, self._liberator, pru.LIBERATOR_MAX_AMOUNT)
-        await self._load_medivac(bot)
 
     async def _train(self, bot, unit_type, structure, current_amount, max_amount):
-        if structure is None or not structure.is_ready or bot.supply_left == 0:
+        if structure is None or not structure.is_ready or bot.supply_left < SUPPLY_USAGE[unit_type]:
             return
 
         if current_amount >= max_amount:
             return
-        else:
-            if (structure is self._barracks_reactor or structure is self._starport_reactor) and len(structure.orders) <= 1:
-                pass
-            elif not structure.noqueue:
-                return
 
-        if bot.can_afford(unit_type):
+        queue_size = 2 if (structure is self._barracks_reactor or structure is self._starport_reactor) else 1
+
+        pending = bot.already_pending(unit_type)
+        if pending < queue_size - len(structure.orders) and bot.can_afford(unit_type):
             await bot.do(structure.train(unit_type))
 
     async def _train_marine(self, bot):
@@ -102,10 +107,8 @@ class MilitarAgent(Agent):
         self._liberator = bot.get_units(UnitTypeId.LIBERATOR).amount
         self._liberator += bot.get_units(UnitTypeId.LIBERATORAG).amount
 
-        self._marine += bot.get_units(UnitTypeId.MARINE, ready=False).amount
-        self._marauder += bot.get_units(UnitTypeId.MARAUDER, ready=False).amount
-        self._siege_tank += bot.get_units(UnitTypeId.SIEGETANK, ready=False).amount
-        self._siege_tank += bot.get_units(UnitTypeId.SIEGETANKSIEGED, ready=False).amount
-        self._medivac += bot.get_units(UnitTypeId.MEDIVAC, ready=False).amount
-        self._liberator += bot.get_units(UnitTypeId.LIBERATOR, ready=False).amount
-        self._liberator += bot.get_units(UnitTypeId.LIBERATORAG, ready=False).amount
+        self._marine += bot.get_pending_orders(AbilityId.BARRACKSTRAIN_MARINE)
+        self._marauder += bot.get_pending_orders(AbilityId.BARRACKSTRAIN_MARAUDER)
+        self._siege_tank += bot.get_pending_orders(AbilityId.FACTORYTRAIN_SIEGETANK)
+        self._medivac += bot.get_pending_orders(AbilityId.STARPORTTRAIN_MEDIVAC)
+        self._liberator += bot.get_pending_orders(AbilityId.STARPORTTRAIN_LIBERATOR)

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import sc2
 from sc2.units import Units
+from sc2.constants import AbilityId
 
 from .starpruuuft import StrategyAgent, BaseAgent, BuilderAgent, WorkerAgent, UpgradeAgent, MilitarAgent, DefenceAgent
 
@@ -18,6 +19,7 @@ class MyBot(sc2.BotAI):
         self._unit_by_tag = {}
         self._units_ready = {}
         self._units_not_ready = {}
+        self._pending_orders = {}
 
     def add_agent(self, agent_):
         self.agents[agent_.name()] = agent_
@@ -39,6 +41,12 @@ class MyBot(sc2.BotAI):
                     result.extend(self._units_not_ready[unit_type])
 
         return Units(result, self._game_data)
+
+    def get_pending_orders(self, ability_type):
+        if ability_type not in self._pending_orders:
+            return 0
+        else:
+            return self._pending_orders[ability_type]
 
     def on_start(self):
         self.add_agent(StrategyAgent(self))
@@ -64,6 +72,7 @@ class MyBot(sc2.BotAI):
         self._unit_by_tag = {}
         self._units_ready = {}
         self._units_not_ready = {}
+        self._pending_orders = {}
 
         # Prepara a lista normal das unidades
         for unit in self.units:
@@ -80,5 +89,13 @@ class MyBot(sc2.BotAI):
 
             if unit.is_ready:
                 self._units_ready[unit_type].append(unit)
+
+                if unit.is_structure:
+                    for order in unit.orders:
+                        ability = order.ability.id
+                        if ability not in self._pending_orders:
+                            self._pending_orders[ability] = 1
+                        else:
+                            self._pending_orders[ability] += 1
             else:
                 self._units_not_ready[unit_type].append(unit)

@@ -14,6 +14,7 @@ class BuilderAgent(Agent):
 
         self._tracked_depots = []
         self._depots_locations = None
+        self._geyser_locations = None
         self._supply_depots_raised = False
 
         self._supply_depot_count = 0
@@ -40,6 +41,10 @@ class BuilderAgent(Agent):
         cc = utilities.get_command_center(bot)
         if cc is None:
             return
+
+        if self._geyser_locations is None:
+            vgs = bot.state.vespene_geyser.closer_than(10.0, cc)
+            self._geyser_locations = [vg.position.to2 for vg in vgs]
 
         if self._barracks_clear is not None and not self._notified:
             self._notified = True
@@ -95,7 +100,7 @@ class BuilderAgent(Agent):
         if self._barracks_clear is not None or self._barracks_tech is not None:
             enough_depots = depot_count >= 3
 
-        if enough_depots and bot.supply_left > 4:
+        if enough_depots and bot.supply_left > 5:
             return
 
         # Constroi um supply depot
@@ -116,7 +121,7 @@ class BuilderAgent(Agent):
 
         # Permite a construção de até 2 refinarias por vez
         if bot.can_afford(UnitTypeId.REFINERY):
-            vgs = bot.state.vespene_geyser.closer_than(20.0, cc)
+            vgs = bot.state.vespene_geyser.closer_than(10.0, cc)
             for vg in vgs:
                 if bot.units(UnitTypeId.REFINERY).closer_than(1.0, vg).exists:
                     break
@@ -142,12 +147,12 @@ class BuilderAgent(Agent):
             return
 
         if bot.already_pending(UnitTypeId.BARRACKS) < 1 and bot.can_afford(UnitTypeId.BARRACKS):
-            if self._barracks_tech is not None:
-                await bot.build(UnitTypeId.BARRACKS, near=cc.position.towards(
-                        bot.game_info.map_center, 10))
+            if self._barracks_tech is None:
+                position = utilities.get_center_relative_position(bot, cc, 3.5)
             else:
-                await bot.build(UnitTypeId.BARRACKS, near=cc.position.towards(
-                        bot.game_info.map_center, 5))
+                position = utilities.get_center_relative_position(bot, cc, 7.5)
+
+            await bot.build(UnitTypeId.BARRACKS, near=position)
 
     async def _build_barracks_tech(self, bot):
         if self._barracks_tech is not None or self._barracks_clear is None:
@@ -177,8 +182,8 @@ class BuilderAgent(Agent):
             return
 
         if bot.already_pending(UnitTypeId.FACTORY) < 1 and bot.can_afford(UnitTypeId.FACTORY):
-            await bot.build(UnitTypeId.FACTORY, near=self._refineries[0].position.towards(
-                        bot.game_info.map_center, 5), max_distance=10)
+            position = utilities.get_center_relative_position(bot, self._geyser_locations[0], 4)
+            await bot.build(UnitTypeId.FACTORY, near=position)
 
     async def _build_factory_tech(self, bot):
         if self._factory_tech is not None:
@@ -198,8 +203,8 @@ class BuilderAgent(Agent):
             return
 
         if bot.already_pending(UnitTypeId.STARPORT) < 1 and bot.can_afford(UnitTypeId.STARPORT):
-            await bot.build(UnitTypeId.STARPORT, near=self._refineries[1].position.towards(
-                        bot.game_info.map_center, 5), max_distance=10)
+            position = utilities.get_center_relative_position(bot, self._geyser_locations[1], 4)
+            await bot.build(UnitTypeId.STARPORT, near=position)
 
     async def _build_starport_reactor(self, bot):
         if self._starport_reactor is not None:

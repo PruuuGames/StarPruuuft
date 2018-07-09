@@ -14,7 +14,7 @@ class Agent:
         return self.__class__.__name__
 
     def log(self, msg):
-        self._info('{class_name}:{msg}'.format(class_name=self.name(), msg=msg))
+        self._info('{class_name}: {msg}'.format(class_name=self.name(), msg=msg))
 
     def queue_message(self, message_type, *args):
         self._messages.append((message_type, args))

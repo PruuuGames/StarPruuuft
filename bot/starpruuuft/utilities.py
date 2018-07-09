@@ -1,4 +1,5 @@
 from sc2.constants import UnitTypeId
+from sc2.position import Point2
 
 
 def is_type(unit, unit_types, mine=True, ready=True):
@@ -94,6 +95,16 @@ def is_done(unit):
 
 def already_pending(bot, unit_type):
     return bot.get_units(unit_type, ready=False).exists
+
+
+def get_center_relative_position(bot, structure, displacement):
+    center = bot.game_info.map_center.to2
+    structure = structure.position.to2
+
+    x_diff = (displacement if center.x > structure.x else -displacement)
+    y_diff = (displacement if center.y > structure.y else -displacement)
+
+    return Point2((structure.x + x_diff, structure.y + y_diff))
 
 
 def any_enemies_near(bot, units, distance):
