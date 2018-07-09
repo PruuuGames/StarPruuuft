@@ -5,7 +5,6 @@ from math import pi
 from .agent import Agent
 from .. import utilities, constants as pru
 
-
 class DefenceAgent(Agent):
     def __init__(self, bot):
         super().__init__(bot)
@@ -13,14 +12,31 @@ class DefenceAgent(Agent):
         self._center = None
         self._sieged = set()
         self._near_ramp = set()
+        self._structures = [
+            UnitTypeId.COMMANDCENTER,
+            UnitTypeId.ORBITALCOMMAND,
+            UnitTypeId.BARRACKS,
+            UnitTypeId.BARRACKSTECHLAB,
+            UnitTypeId.BARRACKSREACTOR,
+            UnitTypeId.FACTORY,
+            UnitTypeId.FACTORYTECHLAB,
+            UnitTypeId.STARPORT,
+            UnitTypeId.STARPORTREACTOR,
+            UnitTypeId.REFINERY,
+            UnitTypeId.SUPPLYDEPOT, 
+            UnitTypeId.SUPPLYDEPOTLOWERED]
+        self._militars = [
+            UnitTypeId.SIEGETANK,
+            UnitTypeId.LIBERATOR,
+            UnitTypeId.MARAUDER,
+            UnitTypeId.MEDIVAC,
+            UnitTypeId.MARINE]
 
     async def on_step(self, bot, iteration):
-        await self._defence(bot, UnitTypeId.SIEGETANK)
-        await self._defence(bot, UnitTypeId.LIBERATOR)
-        await self._defence(bot, UnitTypeId.MARAUDER)
-        await self._defence(bot, UnitTypeId.MEDIVAC)
-        await self._defence(bot, UnitTypeId.MARINE)
+        for unit_type in self._militars:
+            await self._defence(bot, unit_type)
         await self._transform_siege(bot)
+        # await _under_attack(self, bot)
 
     def _get_points(self, bot):
         points = bot.main_base_ramp.points
@@ -51,13 +67,12 @@ class DefenceAgent(Agent):
                 except AssertionError:
                     pass
 
-
-
-
-# self._depots_locations = [
-#     Point2((max({p.x for p in d}), min({p.y for p in d})))
-#     for d in bot.main_base_ramp.top_wall_depos
-# ]
-
-# [(147, 26), (146, 24), (144, 23)]
+    # async def _under_attack(self, bot):
+    #     units = []
+    #     for unit_type in self._structures:
+    #         units |= bot.get_units(unit_type)
+    #     enemy = utilities.any_enemies_near_location(bot, units, pru.SUPPLY_DEPOT_DANGER_DISTANCE)
+    #     for unit_type in self._militars:
+    #         for unit in bot.get_units(unit_type):
+    #             await bot.do(unit.move(enemy))
 
