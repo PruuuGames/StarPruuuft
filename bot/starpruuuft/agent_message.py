@@ -1,11 +1,9 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class AgentMessage(Enum):
-    RAMP_SUPPLY_DEPOT = auto
-    ENEMIES_CLOSE = auto
-    BARRACKS_READY = auto
-    BUILD_BARRACKS = auto
-    BARRACKS_REACTOR_READY = auto
-    BARRACKS_TECHLAB_READY = auto
+    RAMP_SUPPLY_DEPOT = 1
+    ENEMIES_CLOSE = 2
+    BARRACKS_READY = 3
+    ATTACKING = 4
 

@@ -79,19 +79,6 @@ class MilitarAgent(Agent):
 
         await self._train(bot, UnitTypeId.MARAUDER, self._barracks_tech, self._marauder, pru.MARAUDERS_MAX_AMOUNT)
 
-    async def _load_medivac(self, bot):
-        for medivac in bot.units(UnitTypeId.MEDIVAC).idle:
-            cargo = self._medivac_cargo.setdefault(medivac.tag, {
-                UnitTypeId.MARINE: 2,
-                UnitTypeId.MARAUDER: 1,
-                UnitTypeId.SIEGETANK: 1})
-            for unit_type in cargo.keys():
-                for unit in bot.units(unit_type).idle:
-                    if cargo[unit_type]:
-                        await bot.do(medivac(AbilityId.LOAD_MEDIVAC, unit))
-                        cargo[unit_type] -= 1
-                        return
-
     def _cache(self, bot):
         self._barracks_clear, self._barracks_tech, self._barracks_reactor = utilities.get_barracks(bot)
         _, self._factory_tech = utilities.get_factory(bot)

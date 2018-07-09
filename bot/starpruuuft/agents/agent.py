@@ -1,5 +1,6 @@
 import logging
 
+from bot.starpruuuft.agent_message import AgentMessage
 
 class Agent:
     def __init__(self, bot):

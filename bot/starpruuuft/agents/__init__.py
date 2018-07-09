@@ -7,3 +7,4 @@ from .strategy import StrategyAgent
 from .upgrade import UpgradeAgent
 from .militar import MilitarAgent
 from .defence import DefenceAgent
+from .attack import AttackAgent
