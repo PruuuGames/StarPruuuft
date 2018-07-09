@@ -117,6 +117,7 @@ def any_enemies_near(bot, units, distance):
 
     return False
 
+
 def any_enemies_near_location(bot, units, distance):
     enemy_units = bot.known_enemy_units.not_structure
 
